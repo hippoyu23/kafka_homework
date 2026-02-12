@@ -65,6 +65,21 @@
 
 ---
 
+## 環境需求(我使用的版本)
+- Windows+WSL(Ubuntu 24.04)
+- Docker Desktop(需開啟 WSL integration)
+- Docker/Docker Compose:
+  ```bash
+  docker --version
+  docker compose version
+  ```
+- kafka_check.sh腳本需要Kafka CLI(我裝在 WSL):
+  ```bash
+  kafka-topics.sh --version
+  kafka-console-producer.sh --version || true
+  kafka-console-consumer.sh --version || true
+  ```
+
 ### 我如何確保「Kafka能持續運作」
 啟動 Kafka:
 ```bash
@@ -75,6 +90,8 @@ docker compose ps
 我用```docker compose ps```確認container狀態是Up
 
 並用```docker logs $CONTAINER_NAME(這邊要換成正確的container name)```確認沒有一直重啟或fatal error
+
+或是```docker logs -f broker```
 
 ### 如何重現
 我把所有需要的檔案都放在repo:
@@ -248,3 +265,34 @@ Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFac
 ```bash
 docker start kafka2
 ```
+
+## 遇到的困難與解法
+
+### (1)Port 9092被占用(無法啟動）
+現象:出現`Bind for 0.0.0.0:9092 failed: port is already allocated`
+
+原因:另一套 Kafka（單機或 HA）還在跑，占用 9092
+
+解法:先用正確的資料夾把服務關掉
+```bash
+cd single-broker && docker compose down
+```
+或(真的卡住時)
+```bash
+docker ps --format "table {{.Names}}\t{{.Ports}}" | grep 9092 || true
+```
+### (2)container名稱衝突(broker已存在)
+現象:出現`The container name "/broker" is already in use`
+
+原因:之前的broker container還存在(可能狀態是stopped)，但新的一套compose想用同名 container
+
+解法:
+```bash
+docker rm -f broker
+```
+### (3)HA初版設定有timeout(broker互連/advertised listeners)
+現象:produce/consume會timeout或retry
+
+原因:Docker容器內的localhost只指向自己，broker之間互連要用service name(kafka1/kafka2/kafka3)
+
+解法:把listeners拆成INTERNAL/EXTERNAL，broker間走INTERNAL，主機CLI走EXTERNAL
