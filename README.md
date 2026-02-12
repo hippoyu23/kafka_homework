@@ -10,27 +10,27 @@
 這樣Producer跟Consumer就不用直接互相連線，也不會因為其中一邊暫時掛掉就整個卡住。
 
 ### Kafka裡面有哪些角色
-**1) Broker(Kafka伺服器)**
+**(1) Broker(Kafka伺服器)**
 - 一台Kafka服務就是一台broker
 - 例如我在單機版本跑1台broker，在HA版本跑3台broker
 - 多台broker的好處是可以做副本(replication)，提高可用性
 
-**2) Topic(訊息分類)**
+**(2) Topic(訊息分類)**
 - Topic可以理解成「不同類別的公告欄」
 - Producer送訊息時要指定topic，Consumer也從特定topic讀訊息
 
-**3) Partition（切分）**
+**(3) Partition（切分）**
 - 一個topic可以切成多個partition
 - partition的用意是讓資料可以平行處理、提升吞吐量
 - 同一個partition內的訊息會保持順序
 
-**4) Replication(副本)與Leader/Follower**
+**(4) Replication(副本)與Leader/Follower**
 - 每個partition可以有多個副本(replica)，分散在不同broker上
 - 其中一個副本會被選為leader，讀寫都主要走leader
 - 其他副本是follower，負責跟leader同步資料
 - 如果某台broker掛掉，Kafka可以把leader換到其他副本(failover)
 
-**5) ISR(In-Sync Replicas)**
+**(5) ISR(In-Sync Replicas)**
 - ISR是「目前同步狀態正常」的副本集合
 - 當某台broker掛掉或同步落後太多，它會被移出ISR
 - 我在HA驗證時停掉一台broker後，describe看到ISR變少，代表Kafka有偵測到故障並調整同步集合
@@ -166,13 +166,13 @@ docker compose ps
 ## HA驗證方式
 我用兩個方向驗證:
 
-### A) 功能驗證:故障後仍可produce/consume
+### (1) 功能驗證:故障後仍可produce/consume
 - 正常狀態先produce/consume
 - 停掉其中一台broker(例如kafka2)
 - 再produce/consume一次
 - 若仍能成功送出並讀到訊息，代表叢集在部分節點故障下仍可用
 
-### B) 狀態驗證:觀察ISR變化
+### (2) 狀態驗證:觀察ISR變化
 - 故障前:`Isr`應包含3台(例如`3,1,2`)
 - 故障後:被停掉的 broker 應從`Isr`消失(例如變成 `3,1`)
 - 這代表Kafka有偵測到故障並調整同步副本集合，但服務仍維持可用
