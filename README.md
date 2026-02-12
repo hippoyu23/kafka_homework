@@ -182,7 +182,8 @@ docker compose ps
 ## 重現步驟(HA)
 
 **1)避免port衝突**
-如果先前有跑單機版本，請先關掉(是為了避免9092被占用):
+
+如果先前有跑single版本，要記得先關掉(是為了避免9092被占用)
 ```bash
 cd single-broker
 docker compose down
@@ -193,7 +194,7 @@ cd ha-3brokers
 docker compose up -d
 docker compose ps
 ```
-預期會看到:
+預期會看到
 ```
 [+] up 4/4
  ✔ Network ha-3brokers_default Created                                                                                           0.0s
@@ -213,11 +214,11 @@ kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ha-topic --pa
 ```
 Created topic ha-topic.
 ```
-查看describe:
+查看describe
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
-預期會看到:
+預期會看到
 ```
 Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,2,3
 ```
@@ -230,7 +231,7 @@ echo "$MSG1" | kafka-console-producer.sh --bootstrap-server localhost:9092 --top
 ```bash
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 1
 ```
-預期會看到:
+預期會看到
 ```
 Processed a total of 1 messages
 ```
@@ -239,6 +240,7 @@ Processed a total of 1 messages
 docker stop kafka2
 ```
 **6)故障後仍可用(produce一筆然後consume兩筆)**
+
 再多送一筆資料
 ```bash
 MSG2="ha-$(date +%s)-$RANDOM"
@@ -248,7 +250,7 @@ echo "$MSG2" | kafka-console-producer.sh --bootstrap-server localhost:9092 --top
 ```bash
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 2
 ```
-預期會看到:
+預期會看到
 ```
 ha-1770916549-5380
 ha-1770916590-5944
@@ -258,7 +260,7 @@ Processed a total of 2 messages
 ```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
-預期會看到(可以發現2不見了):
+預期會看到(可以發現2不見了)
 ```
 Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,3
 ```
