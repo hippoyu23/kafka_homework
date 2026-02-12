@@ -276,7 +276,7 @@ docker start kafka2
 ### (1)Port 9092被占用(無法啟動）
 現象:出現`Bind for 0.0.0.0:9092 failed: port is already allocated`
 
-原因:另一套 Kafka（單機或 HA）還在跑，占用 9092
+原因:另一套Kafka(單機或HA)還在跑，占用9092
 
 解法:先用正確的資料夾把服務關掉
 ```bash
@@ -289,7 +289,7 @@ docker ps --format "table {{.Names}}\t{{.Ports}}" | grep 9092 || true
 ### (2)container名稱衝突(broker已存在)
 現象:出現`The container name "/broker" is already in use`
 
-原因:之前的broker container還存在(可能狀態是stopped)，但新的一套compose想用同名 container
+原因:之前的broker container還存在(可能狀態是stopped)，但新的一套compose想用同名container
 
 解法:
 ```bash
