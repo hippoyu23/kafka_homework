@@ -73,20 +73,20 @@ docker compose ps
 ```
 
 我用```docker compose ps```確認container狀態是Up
-並用```docker logs $CONTAINER_NAME(這邊要換成正確的container name)```確認沒有一直重啟或fatal error
 
----
+並用```docker logs $CONTAINER_NAME(這邊要換成正確的container name)```確認沒有一直重啟或fatal error
 
 ### 如何重現
 我把所有需要的檔案都放在repo:
--```docker-compose.yml```:描述Kafka的部署方式
--```kafka_check.sh```:一鍵驗證Kafka是否正常(produce/consume端到端)
--```README.md```:提供從零開始的操作步驟
+- ```docker-compose.yml```:描述Kafka的部署方式
+- ```kafka_check.sh```:一鍵驗證Kafka是否正常(produce/consume端到端)
+- ```README.md```:提供從零開始的操作步驟
 
 重現步驟:
+
 **1) 進到專案資料夾**
 ```bash
-cd <repo>/single-broker
+cd ~/single-broker
 ```
 **2) 啟動kafka**
 ```bash
