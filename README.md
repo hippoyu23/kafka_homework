@@ -59,13 +59,13 @@
 
 ## 環境需求(我使用的版本)
 - Windows+WSL(Ubuntu 24.04)
-- Docker Desktop(需開啟 WSL integration)
+- Docker Desktop(需開啟WSL integration)
 - Docker/Docker Compose:
   ```bash
   docker --version
   docker compose version
   ```
-- kafka_check.sh腳本需要Kafka CLI(我裝在 WSL):
+- kafka_check.sh腳本需要Kafka CLI(我裝在WSL):
   ```bash
   kafka-topics.sh --version
   kafka-console-producer.sh --version || true
