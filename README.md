@@ -98,13 +98,10 @@ docker compose ps
 chmod +x kafka_check.sh
 ./kafka_check.sh localhost:9092 healthcheck-topic
 ```
-**3) 健康檢查**
-```bash
-chmod +x kafka_check.sh
-./kafka_check.sh localhost:9092 healthcheck-topic
-```
 假設成功會看到:```✅ SUCCESS: Kafka is working (produce/consume verified)```
+
 **收工與重啟**
+
 關閉:
 ```bash
 docker compose down
