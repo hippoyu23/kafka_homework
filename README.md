@@ -9,9 +9,7 @@
 - Consumer(取訊息的人)再從 Kafka 把訊息讀走
 這樣Producer跟Consumer就不用直接互相連線，也不會因為其中一邊暫時掛掉就整個卡住。
 
----
-
-### Kafka裡面有哪些主要角色
+### Kafka裡面有哪些角色
 **1) Broker(Kafka伺服器)**
 - 一台Kafka服務就是一台broker
 - 例如我在單機版本跑1台broker，在HA版本跑3台broker
@@ -37,8 +35,6 @@
 - 當某台broker掛掉或同步落後太多，它會被移出ISR
 - 我在HA驗證時停掉一台broker後，describe看到ISR變少，代表Kafka有偵測到故障並調整同步集合
 
----
-
 ### 我這份作業的部署架構
 我把部署分成兩個環境，避免互相覆蓋:
 
@@ -55,7 +51,7 @@
 
 ---
 
-## 思考過程、取捨與可重現性(我怎麼做、為什麼這樣做)
+## 思考過程、取捨與可重現性
 
 ### 目標
 這份作業我把重點放在:
@@ -80,7 +76,9 @@
   kafka-console-consumer.sh --version || true
   ```
 
-### 我如何確保「Kafka能持續運作」
+---
+
+## 我如何確保「Kafka能持續運作」
 啟動 Kafka:
 ```bash
 docker compose up -d
@@ -93,7 +91,9 @@ docker compose ps
 
 或是```docker logs -f broker```
 
-### 如何重現
+---
+
+## 如何重現
 我把所有需要的檔案都放在repo:
 - ```docker-compose.yml```:描述Kafka的部署方式
 - ```kafka_check.sh```:一鍵驗證Kafka是否正常(produce/consume端到端)
@@ -129,6 +129,8 @@ docker compose up -d
 docker compose ps
 ```
 
+---
+
 # HA 實作(High Availability)
 
 ## 我選擇實作的HA措施是什麼?
@@ -147,11 +149,11 @@ docker compose ps
 ---
 
 ## HA 架構說明
-### 1) 建立3 broker Kafka cluster(KRaft mode)
+### (1) 建立3 broker Kafka cluster(KRaft mode)
 我在`ha-3brokers/`用Docker Compose部署三台broker(kafka1/kafka2/kafka3)  
 其中每台broker同時扮演broker與controller(KRaft)，並透過容器內部網路用service name互相溝通
 
-### 2) 建立 RF=3 的 topic
+### (2) 建立RF=3的topic
 我建立topic `ha-topic`，設定:
 - partitions=1
 - replication-factor=3
@@ -178,7 +180,7 @@ docker compose ps
 
 ---
 
-# 重現步驟(HA)
+## 重現步驟(HA)
 
 **1)避免port衝突**
 如果先前有跑單機版本，請先關掉(是為了避免9092被占用):
@@ -265,6 +267,8 @@ Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFac
 ```bash
 docker start kafka2
 ```
+
+---
 
 ## 遇到的困難與解法
 
