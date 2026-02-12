@@ -38,12 +38,12 @@
 ### 我這份作業的部署架構
 我把部署分成兩個環境，避免互相覆蓋:
 
-**(A) 單機環境(single-broker)**
+**(1) 單機環境(single-broker)**
 - Docker Compose跑1台Kafka broker
 - 用`kafka_check.sh`做端到端驗證(produce/consume)
 - 目的:先確認Kafka核心功能正常(能送、能存、能讀)
 
-**(B) HA環境(ha-3brokers)**
+**(2) HA環境(ha-3brokers)**
 - Docker Compose跑3台Kafka broker(同一個cluster)
 - 建立`replication-factor=3`的topic
 - 故障驗證:停掉其中一台broker後仍可produce/consume，並觀察ISR變化
@@ -132,7 +132,10 @@ docker compose ps
 ## 我選擇實作的HA措施是什麼?
 我選擇實作的HA措施是:
 
-**(1)多broker(3台)+(2)topic replication(replication-factor=3)**  
+**(1)多broker(3台)**
+
+**(2)topic replication(replication-factor=3)**
+
 並用「停掉其中一台 broker」來做故障驗證。
 
 ### 為什麼選這個?
