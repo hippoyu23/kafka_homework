@@ -49,10 +49,6 @@
 - 故障驗證:停掉其中一台broker後仍可produce/consume，並觀察ISR變化
 - 目的:證明我理解並實作至少一項HA機制(多broker+replication)
 
----
-
-## 思考過程、取捨與可重現性
-
 ### 目標
 這份作業我把重點放在:
 1. Kafka能成功啟動並持續運作
