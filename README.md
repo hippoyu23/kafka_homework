@@ -214,7 +214,7 @@ kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ha-topic --pa
 ```
 Created topic ha-topic.
 ```
-查看describe
+**4)查看describe**
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
@@ -222,7 +222,7 @@ kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
 Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,2,3
 ```
-**4)正常狀態端到端驗證(produce一筆然後consume一筆)**
+**5)正常狀態端到端驗證(produce一筆然後consume一筆)**
 ```bash
 MSG1="ha-$(date +%s)-$RANDOM"
 echo "$MSG1" | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic ha-topic
@@ -235,11 +235,11 @@ kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --f
 ```
 Processed a total of 1 messages
 ```
-**5)故障模擬**
+**6)故障模擬**
 ```bash
 docker stop kafka2
 ```
-**6)故障後仍可用(produce一筆然後consume兩筆)**
+**7)故障後仍可用(produce一筆然後consume兩筆)**
 
 再多送一筆資料
 ```bash
@@ -256,7 +256,7 @@ ha-1770916549-5380
 ha-1770916590-5944
 Processed a total of 2 messages
 ```
-**7)觀察ISR變化(HA的證據)**
+**8)觀察ISR變化(HA的證據)**
 ```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
@@ -264,7 +264,7 @@ kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
 ```
 Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,3
 ```
-**8)把kafka2開回來**
+**9)把kafka2開回來**
 ```bash
 docker start kafka2
 ```
