@@ -86,7 +86,7 @@ docker compose ps
 
 **1) 進到專案資料夾**
 ```bash
-cd ~/single-broker
+cd single-broker
 ```
 **2) 啟動kafka**
 ```bash
@@ -171,23 +171,37 @@ docker compose down
 ```
 **2)啟動HA(3 brokers)**
 ```bash
-cd ~/ha-3brokers
+cd ha-3brokers
 docker compose up -d
 docker compose ps
 ```
 預期會看到:
 ```
-- kafka1 對外 9092
-- kafka2 對外 9094
-- kafka3 對外 9096
+[+] up 4/4
+ ✔ Network ha-3brokers_default Created                                                                                           0.0s
+ ✔ Container kafka1            Created                                                                                           0.2s
+ ✔ Container kafka3            Created                                                                                           0.2s
+ ✔ Container kafka2            Created                                                                                           0.2s
+NAME      IMAGE                COMMAND                  SERVICE   CREATED        STATUS                  PORTS
+kafka1    apache/kafka:3.7.1   "/__cacert_entrypoin…"   kafka1    1 second ago   Up Less than a second   0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp
+kafka2    apache/kafka:3.7.1   "/__cacert_entrypoin…"   kafka2    1 second ago   Up Less than a second   0.0.0.0:9094->9092/tcp, [::]:9094->9092/tcp
+kafka3    apache/kafka:3.7.1   "/__cacert_entrypoin…"   kafka3    1 second ago   Up Less than a second   0.0.0.0:9096->9092/tcp, [::]:9096->9092/tcp
 ```
 **3)建立RF=3的topic**
 ```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ha-topic --partitions 1 --replication-factor 3
 ```
+會顯示topic已創建
+```
+Created topic ha-topic.
+```
 查看describe:
 ```
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
+```
+預期會看到:
+```
+Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,2,3
 ```
 **4)正常狀態端到端驗證(produce一筆然後consume一筆)**
 ```bash
@@ -197,6 +211,10 @@ echo "$MSG1" | kafka-console-producer.sh --bootstrap-server localhost:9092 --top
 
 ```bash
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 1
+```
+預期會看到:
+```
+Processed a total of 1 messages
 ```
 **5)故障模擬**
 ```bash
@@ -212,9 +230,19 @@ echo "$MSG2" | kafka-console-producer.sh --bootstrap-server localhost:9092 --top
 ```bash
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 2
 ```
+預期會看到:
+```
+ha-1770916549-5380
+ha-1770916590-5944
+Processed a total of 2 messages
+```
 **7)觀察ISR變化(HA的證據)**
 ```bash
 kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
+```
+預期會看到(可以發現2不見了):
+```
+Topic: ha-topic TopicId: cYlTOVQ2S_GbPnABm_jWrQ PartitionCount: 1 ReplicationFactor: 3 Configs:   Topic: ha-topic Partition: 0 Leader: 1 Replicas: 1,2,3 Isr: 1,3
 ```
 **8)把kafka2開回來**
 ```bash
