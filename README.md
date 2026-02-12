@@ -112,3 +112,111 @@ docker compose up -d
 docker compose ps
 ```
 
+# HA 實作(High Availability)
+
+## 我選擇實作的HA措施是什麼?
+我選擇實作的HA措施是:
+
+**(1)多broker(3台)+(2)topic replication(replication-factor=3)**  
+並用「停掉其中一台 broker」來做故障驗證。
+
+### 為什麼選這個?
+因為我認為這是Kafka最典型、也最容易驗證的HA機制:
+- 多broker可以避免單點故障(不會一台掛掉就整個不能用)
+- replication-factor=3代表同一份資料會有3份副本分散在不同broker
+- 某台broker掛掉時，Kafka可以用剩下的副本繼續提供服務
+- 我也可以透過`Isr`(同步副本集合)是否變化來證明HA有運作
+
+---
+
+## HA 架構說明
+### 1) 建立3 broker Kafka cluster(KRaft mode)
+我在`ha-3brokers/`用Docker Compose部署三台broker(kafka1/kafka2/kafka3)  
+其中每台broker同時扮演broker與controller(KRaft)，並透過容器內部網路用service name互相溝通
+
+### 2) 建立 RF=3 的 topic
+我建立topic `ha-topic`，設定:
+- partitions=1
+- replication-factor=3
+
+因此`describe`應該會看到:
+- Replicas會有3個broker
+- Isr一開始會是3個broker(代表都同步)
+
+---
+
+## HA驗證方式
+我用兩個方向驗證:
+
+### A) 功能驗證:故障後仍可produce/consume
+- 正常狀態先produce/consume
+- 停掉其中一台broker(例如kafka2)
+- 再produce/consume一次
+- 若仍能成功送出並讀到訊息，代表叢集在部分節點故障下仍可用
+
+### B) 狀態驗證:觀察ISR變化
+- 故障前:`Isr`應包含3台(例如`3,1,2`)
+- 故障後:被停掉的 broker 應從`Isr`消失(例如變成 `3,1`)
+- 這代表Kafka有偵測到故障並調整同步副本集合，但服務仍維持可用
+
+---
+
+# 重現步驟(HA)
+
+**1)避免port衝突**
+如果先前有跑單機版本，請先關掉(是為了避免9092被占用):
+```bash
+cd single-broker
+docker compose down
+```
+**2)啟動HA(3 brokers)**
+```bash
+cd ~/ha-3brokers
+docker compose up -d
+docker compose ps
+```
+預期會看到:
+```
+- kafka1 對外 9092
+- kafka2 對外 9094
+- kafka3 對外 9096
+```
+**3)建立RF=3的topic**
+```bash
+kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ha-topic --partitions 1 --replication-factor 3
+```
+查看describe:
+```
+kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
+```
+**4)正常狀態端到端驗證(produce一筆然後consume一筆)**
+```bash
+MSG1="ha-$(date +%s)-$RANDOM"
+echo "$MSG1" | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic ha-topic
+```
+
+```bash
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 1
+```
+**5)故障模擬**
+```bash
+docker stop kafka2
+```
+**6)故障後仍可用(produce一筆然後consume兩筆)**
+再多送一筆資料
+```bash
+MSG2="ha-$(date +%s)-$RANDOM"
+echo "$MSG2" | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic ha-topic
+```
+再讀回來(兩筆，避免consumer等不到更多訊息而造成超時)
+```bash
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ha-topic --from-beginning --max-messages 2
+```
+**7)觀察ISR變化(HA的證據)**
+```bash
+kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic ha-topic
+```
+**8)把kafka2開回來**
+```bash
+docker start kafka2
+```
